@@ -73,6 +73,8 @@ maybe_finalize_completed_branch() {
   local COUNTS
   local BASE_ONLY
   local CURRENT_ONLY
+  local TARGET_HEAD
+  local BASE_HEAD
 
   CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || true)"
   BASE_BRANCH="$("$ROOT/scripts/harness/base_branch.sh")"
@@ -94,6 +96,7 @@ maybe_finalize_completed_branch() {
   CURRENT_ONLY="${COUNTS##*$'\t'}"
 
   if [ "$BASE_ONLY" -eq 0 ] && [ "$CURRENT_ONLY" -gt 0 ]; then
+    TARGET_HEAD="$(git rev-parse "$CURRENT_BRANCH")"
     log "Project complete and $CURRENT_BRANCH is ahead of $BASE_BRANCH. Running final verification."
     if ! "$ROOT/scripts/harness/local_checks.sh"; then
       log "Final verification failed. Clearing the completion marker and continuing with a normal ship run."
@@ -109,9 +112,14 @@ maybe_finalize_completed_branch() {
     fi
 
     if run_git_with_retries git merge --ff-only "$CURRENT_BRANCH"; then
-      log "Auto-finalized $CURRENT_BRANCH into $BASE_BRANCH."
-      print_completion_report "$SUMMARY" "Fast-forwarded $CURRENT_BRANCH into $BASE_BRANCH automatically."
-      return 0
+      BASE_HEAD="$(git rev-parse "$BASE_BRANCH")"
+      if [ "$BASE_HEAD" = "$TARGET_HEAD" ]; then
+        log "Auto-finalized $CURRENT_BRANCH into $BASE_BRANCH."
+        print_completion_report "$SUMMARY" "Fast-forwarded $CURRENT_BRANCH into $BASE_BRANCH automatically."
+        return 0
+      fi
+
+      log "Merge command returned success, but $BASE_BRANCH did not move to $TARGET_HEAD."
     fi
 
     run_git_with_retries git checkout "$CURRENT_BRANCH" || true

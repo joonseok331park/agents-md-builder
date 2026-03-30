@@ -25,6 +25,28 @@ print_completion_report() {
   fi
 }
 
+run_git_with_retries() {
+  local ATTEMPT
+  local OUTPUT=""
+  local STATUS=0
+
+  for ATTEMPT in 1 2 3; do
+    if OUTPUT="$("$@" 2>&1)"; then
+      return 0
+    fi
+
+    STATUS="$?"
+    if [ "$ATTEMPT" -lt 3 ]; then
+      sleep 1
+    fi
+  done
+
+  if [ -n "$OUTPUT" ]; then
+    log "$OUTPUT"
+  fi
+  return "$STATUS"
+}
+
 is_auto_next_task() {
   local NORMALIZED
 
@@ -80,14 +102,19 @@ maybe_finalize_completed_branch() {
     fi
 
     log "Fast-forwarding $BASE_BRANCH to $CURRENT_BRANCH."
-    git checkout "$BASE_BRANCH" >/dev/null 2>&1
-    if git merge --ff-only "$CURRENT_BRANCH" >/dev/null 2>&1; then
+    if ! run_git_with_retries git checkout "$BASE_BRANCH"; then
+      log "Automatic checkout of $BASE_BRANCH failed. Leaving the completed branch unchanged."
+      print_completion_report "$SUMMARY" "Automatic base-branch finalization could not check out $BASE_BRANCH, so the completed branch was left unchanged."
+      return 0
+    fi
+
+    if run_git_with_retries git merge --ff-only "$CURRENT_BRANCH"; then
       log "Auto-finalized $CURRENT_BRANCH into $BASE_BRANCH."
       print_completion_report "$SUMMARY" "Fast-forwarded $CURRENT_BRANCH into $BASE_BRANCH automatically."
       return 0
     fi
 
-    git checkout "$CURRENT_BRANCH" >/dev/null 2>&1 || true
+    run_git_with_retries git checkout "$CURRENT_BRANCH" || true
     log "Auto-finalization failed. Leaving the completed branch unchanged."
     print_completion_report "$SUMMARY" "Automatic base-branch finalization failed, so the completed branch was left unchanged."
     return 0

@@ -9,6 +9,7 @@ HEARTBEAT_INTERVAL="${SHIP_HEARTBEAT_INTERVAL:-15}"
 RENDERER="$ROOT/scripts/harness/render_claude_stream.py"
 MCP_CONFIG="$ROOT/scripts/harness/claude-no-mcp.json"
 COMPLETION_SCRIPT="$ROOT/scripts/harness/project_completion.py"
+CONFLICT_PROMPT_FILE="$ROOT/.claude/workflows/finalization-conflict-resolver.md"
 
 log() {
   printf '[ship] %s\n' "$*" >&2
@@ -39,6 +40,10 @@ print_finalization_blocked_report() {
   printf '[assistant] Rebase or merge %s onto %s manually, then rerun __AUTO_NEXT__.\n' "$CURRENT_BRANCH" "$BASE_BRANCH" >&2
 }
 
+join_lines() {
+  awk 'BEGIN { first = 1 } { if (!first) printf ", "; printf "%s", $0; first = 0 } END { printf "\n" }'
+}
+
 run_git_with_retries() {
   local ATTEMPT
   local OUTPUT=""
@@ -59,6 +64,141 @@ run_git_with_retries() {
     log "$OUTPUT"
   fi
   return "$STATUS"
+}
+
+rebase_in_progress() {
+  [ -d "$ROOT/.git/rebase-apply" ] || [ -d "$ROOT/.git/rebase-merge" ]
+}
+
+abort_rebase_if_active() {
+  if rebase_in_progress; then
+    git rebase --abort >/dev/null 2>&1 || true
+  fi
+}
+
+run_conflict_resolver() {
+  local CURRENT_BRANCH="$1"
+  local BASE_BRANCH="$2"
+  local CONFLICT_FILES="$3"
+  local RESOLVE_STREAM_DIR=""
+  local RESOLVE_STREAM_PIPE=""
+  local RESOLVE_RENDERER_PID=""
+  local CLAUDE_STATUS=0
+  local PROMPT=""
+
+  RESOLVE_STREAM_DIR="$(mktemp -d "${TMPDIR:-/tmp}/agents-md-builder-conflicts.XXXXXX")"
+  RESOLVE_STREAM_PIPE="$RESOLVE_STREAM_DIR/claude-stream.jsonl"
+  mkfifo "$RESOLVE_STREAM_PIPE"
+
+  python3 "$RENDERER" <"$RESOLVE_STREAM_PIPE" &
+  RESOLVE_RENDERER_PID="$!"
+
+  PROMPT=$(
+    cat <<EOF
+Resolve the current git rebase conflicts for automatic completed-branch finalization.
+Base branch: $BASE_BRANCH
+Completed branch: $CURRENT_BRANCH
+Conflicted files: $CONFLICT_FILES
+
+Only resolve the listed conflicted files. Preserve the completed branch's intended behavior while integrating the newer base-branch changes. Leave the worktree ready for 'git add' by the harness.
+EOF
+  )
+
+  log "Resolving rebase conflicts with Claude."
+  set +e
+  claude -p "$PROMPT" \
+    --verbose \
+    --output-format stream-json \
+    --include-partial-messages \
+    --permission-mode acceptEdits \
+    --tools "Read,Glob,Grep,Edit,MultiEdit,Write,Bash" \
+    --disallowedTools "AskUserQuestion,TaskOutput,Bash(git merge *),Bash(git rebase *),Bash(git commit *),Bash(git push *),Bash(git pull *),Bash(git reset *),Bash(git stash *),Bash(git cherry-pick *),Bash(git add *)" \
+    --strict-mcp-config \
+    --mcp-config "$MCP_CONFIG" \
+    --append-system-prompt-file "$CONFLICT_PROMPT_FILE" \
+    --allowedTools "Read" "Glob" "Grep" "Edit" "MultiEdit" "Write" \
+    "Bash(pwd)" "Bash(ls *)" "Bash(find *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)" "Bash(sed *)" \
+    "Bash(git status *)" "Bash(git diff *)" "Bash(git show *)" "Bash(git rev-parse *)" "Bash(git branch *)" \
+    "Bash(git ls-files *)" >"$RESOLVE_STREAM_PIPE"
+  CLAUDE_STATUS="$?"
+  set -e
+
+  wait "$RESOLVE_RENDERER_PID" 2>/dev/null || true
+  rm -rf "$RESOLVE_STREAM_DIR"
+  return "$CLAUDE_STATUS"
+}
+
+reconcile_completed_branch() {
+  local SUMMARY="$1"
+  local CURRENT_BRANCH="$2"
+  local BASE_BRANCH="$3"
+  local CONFLICT_PATHS=""
+  local CONFLICT_FILES=""
+
+  abort_rebase_if_active
+
+  log "Attempting to rebase completed branch $CURRENT_BRANCH onto $BASE_BRANCH."
+  if git rebase -X theirs "$BASE_BRANCH"; then
+    "$COMPLETION_SCRIPT" mark --summary "$SUMMARY" >/dev/null
+    log "Completed branch rebased cleanly onto $BASE_BRANCH."
+    return 0
+  fi
+
+  if ! rebase_in_progress; then
+    log "Automatic rebase could not start cleanly."
+    return 1
+  fi
+
+  while rebase_in_progress; do
+    CONFLICT_PATHS="$(git diff --name-only --diff-filter=U || true)"
+    CONFLICT_FILES="$(printf '%s\n' "$CONFLICT_PATHS" | sed '/^$/d' | join_lines || true)"
+    if [ -z "$CONFLICT_FILES" ]; then
+      if GIT_EDITOR=true git rebase --continue; then
+        continue
+      fi
+
+      if rebase_in_progress; then
+        log "Rebase continuation failed without explicit conflicted files."
+        abort_rebase_if_active
+        return 1
+      fi
+      break
+    fi
+
+    if ! run_conflict_resolver "$CURRENT_BRANCH" "$BASE_BRANCH" "$CONFLICT_FILES"; then
+      log "Conflict resolver failed."
+      abort_rebase_if_active
+      return 1
+    fi
+
+    if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
+      log "Conflict resolver left unmerged files."
+      abort_rebase_if_active
+      return 1
+    fi
+
+    if [ -n "$CONFLICT_PATHS" ]; then
+      git add -- $CONFLICT_PATHS
+    fi
+
+    if GIT_EDITOR=true git rebase --continue; then
+      continue
+    fi
+
+    if rebase_in_progress; then
+      continue
+    fi
+  done
+
+  if rebase_in_progress; then
+    log "Automatic reconciliation ended with an active rebase."
+    abort_rebase_if_active
+    return 1
+  fi
+
+  "$COMPLETION_SCRIPT" mark --summary "$SUMMARY" >/dev/null
+  log "Completed branch rebased onto $BASE_BRANCH with automatic conflict resolution."
+  return 0
 }
 
 is_auto_next_task() {
@@ -110,9 +250,16 @@ maybe_finalize_completed_branch() {
   CURRENT_ONLY="${COUNTS##*$'\t'}"
 
   if [ "$BASE_ONLY" -gt 0 ] && [ "$CURRENT_ONLY" -gt 0 ]; then
-    log "FINALIZATION_BLOCKED: $BASE_BRANCH advanced after $CURRENT_BRANCH was completed."
-    print_finalization_blocked_report "$SUMMARY" "$CURRENT_BRANCH" "$BASE_BRANCH" "$BASE_ONLY" "$CURRENT_ONLY"
-    return 0
+    log "Completed branch diverged from $BASE_BRANCH after completion. Attempting automatic reconciliation."
+    if ! reconcile_completed_branch "$SUMMARY" "$CURRENT_BRANCH" "$BASE_BRANCH"; then
+      log "FINALIZATION_BLOCKED: automatic reconciliation could not resolve the divergence."
+      print_finalization_blocked_report "$SUMMARY" "$CURRENT_BRANCH" "$BASE_BRANCH" "$BASE_ONLY" "$CURRENT_ONLY"
+      return 0
+    fi
+
+    COUNTS="$(git rev-list --left-right --count "$BASE_BRANCH"...HEAD)"
+    BASE_ONLY="${COUNTS%%$'\t'*}"
+    CURRENT_ONLY="${COUNTS##*$'\t'}"
   fi
 
   if [ "$BASE_ONLY" -eq 0 ] && [ "$CURRENT_ONLY" -gt 0 ]; then

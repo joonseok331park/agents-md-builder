@@ -5,7 +5,7 @@ Follow `AGENTS.md` and `CLAUDE.md` exactly.
 If the task is `__AUTO_NEXT__` or is vague such as `continue`, `next`, or `do the next step`:
 1. Inspect `specification.md`, `git status`, and the current implementation state. Use `./scripts/harness/branch_context.sh` for branch-vs-base context. Never assume the base branch is `main`.
 2. Decide whether the current branch already satisfies the v1 specification and whether any materially useful next task remains. Treat "more tests", "nice-to-have polish", and speculative cleanup as not materially useful once the spec and definition of done are already satisfied.
-3. If the project is already complete or further progress would be unnecessary, run `./scripts/harness/project_completion.py mark --summary "<one-sentence completion reason>"`, do not edit tracked files, and stop with a completion report instead of choosing another task. `ship.sh` will handle any later automatic base-branch finalization for valid completed branches.
+3. If the project is already complete or further progress would be unnecessary, run `./scripts/harness/project_completion.py mark --summary "<one-sentence completion reason>"`, do not edit tracked files, and stop with a completion report instead of choosing another task. `ship.sh` will handle any later automatic base-branch finalization for valid completed branches, including automatic reconciliation when possible and `FINALIZATION_BLOCKED` when it cannot safely finish.
 4. Otherwise choose exactly one smallest high-value next task.
 5. Explain the chosen task in 3 lines or fewer before editing.
 6. Do not bundle multiple logical units into one run.

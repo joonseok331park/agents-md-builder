@@ -25,6 +25,20 @@ print_completion_report() {
   fi
 }
 
+print_finalization_blocked_report() {
+  local SUMMARY="$1"
+  local CURRENT_BRANCH="$2"
+  local BASE_BRANCH="$3"
+  local BASE_ONLY="$4"
+  local CURRENT_ONLY="$5"
+
+  printf '[assistant] FINALIZATION_BLOCKED\n' >&2
+  printf '[assistant] %s\n' "$SUMMARY" >&2
+  printf '[assistant] Automatic fast-forward finalization from %s into %s is blocked because %s has %s newer commit(s) while %s still has %s commit(s) not on %s.\n' \
+    "$CURRENT_BRANCH" "$BASE_BRANCH" "$BASE_BRANCH" "$BASE_ONLY" "$CURRENT_BRANCH" "$CURRENT_ONLY" "$BASE_BRANCH" >&2
+  printf '[assistant] Rebase or merge %s onto %s manually, then rerun __AUTO_NEXT__.\n' "$CURRENT_BRANCH" "$BASE_BRANCH" >&2
+}
+
 run_git_with_retries() {
   local ATTEMPT
   local OUTPUT=""
@@ -94,6 +108,12 @@ maybe_finalize_completed_branch() {
   COUNTS="$(git rev-list --left-right --count "$BASE_BRANCH"...HEAD)"
   BASE_ONLY="${COUNTS%%$'\t'*}"
   CURRENT_ONLY="${COUNTS##*$'\t'}"
+
+  if [ "$BASE_ONLY" -gt 0 ] && [ "$CURRENT_ONLY" -gt 0 ]; then
+    log "FINALIZATION_BLOCKED: $BASE_BRANCH advanced after $CURRENT_BRANCH was completed."
+    print_finalization_blocked_report "$SUMMARY" "$CURRENT_BRANCH" "$BASE_BRANCH" "$BASE_ONLY" "$CURRENT_ONLY"
+    return 0
+  fi
 
   if [ "$BASE_ONLY" -eq 0 ] && [ "$CURRENT_ONLY" -gt 0 ]; then
     TARGET_HEAD="$(git rev-parse "$CURRENT_BRANCH")"

@@ -11,6 +11,14 @@ log() {
   printf '[review] %s\n' "$*" >&2
 }
 
+skip_review() {
+  local SUMMARY="$1"
+  log "$SUMMARY"
+  write_skip_json "$SUMMARY"
+  cat "$OUT_DIR/gemini_review.json"
+  exit 0
+}
+
 write_skip_json() {
   local SUMMARY="$1"
   cat > "$OUT_DIR/gemini_review.json" <<JSON
@@ -51,29 +59,45 @@ run_with_heartbeat() {
   return "$STATUS"
 }
 
+classify_failure() {
+  local LOG_CONTENT=""
+
+  if [ -f "$OUT_DIR/gemini_review.stderr.log" ]; then
+    LOG_CONTENT="$(cat "$OUT_DIR/gemini_review.stderr.log")"
+  fi
+
+  if grep -Eqi 'resource_exhausted|quota|rate limit|too many requests|429|limit exceeded|exceeded .* quota' <<<"$LOG_CONTENT"; then
+    printf 'quota'
+    return
+  fi
+
+  if grep -Eqi 'not authenticated|not logged in|log in|login required|unauthorized|authentication|api key|permission denied' <<<"$LOG_CONTENT"; then
+    printf 'auth'
+    return
+  fi
+
+  if grep -Eqi 'command not found|no such file or directory' <<<"$LOG_CONTENT"; then
+    printf 'tool'
+    return
+  fi
+
+  printf 'other'
+}
+
 log "Preparing sanitized workspace for Gemini review."
 WS="$("$ROOT/scripts/harness/prepare_review_workspace.sh" "$TASK")"
 STATUS=$?
 
 if [ "$STATUS" -eq 10 ]; then
-  log "Gemini review skipped: no current diff."
-  write_skip_json "Gemini review skipped because there is no current diff to review."
-  cat "$OUT_DIR/gemini_review.json"
-  exit 0
+  skip_review "Gemini review skipped because there is no current diff to review."
 fi
 
 if [ "$STATUS" -eq 11 ]; then
-  log "Gemini review skipped: only excluded files changed."
-  write_skip_json "Gemini review skipped because only excluded files changed."
-  cat "$OUT_DIR/gemini_review.json"
-  exit 0
+  skip_review "Gemini review skipped because only excluded files changed."
 fi
 
 if [ "$STATUS" -ne 0 ]; then
-  log "Gemini review skipped: sanitized workspace could not be prepared."
-  write_skip_json "Gemini review skipped because the sanitized review workspace could not be prepared."
-  cat "$OUT_DIR/gemini_review.json"
-  exit 0
+  skip_review "Gemini review skipped because the sanitized review workspace could not be prepared."
 fi
 
 RAW_JSON="$OUT_DIR/gemini_outer.json"
@@ -91,17 +115,24 @@ fi
 popd >/dev/null
 
 if [ "$STATUS" -eq 124 ]; then
-  log "Gemini review timed out after $REVIEW_TIMEOUT."
-  write_skip_json "Gemini review timed out after $REVIEW_TIMEOUT."
-  cat "$OUT_DIR/gemini_review.json"
-  exit 0
+  skip_review "Gemini review skipped because it timed out after $REVIEW_TIMEOUT."
 fi
 
 if [ "$STATUS" -ne 0 ]; then
-  log "Gemini review failed or Gemini CLI is not authenticated."
-  write_skip_json "Gemini review failed or Gemini CLI is not authenticated. Run 'gemini' once to log in, then try again."
-  cat "$OUT_DIR/gemini_review.json"
-  exit 0
+  case "$(classify_failure)" in
+    quota)
+      skip_review "Gemini review skipped because Gemini quota or rate limits were reached."
+      ;;
+    auth)
+      skip_review "Gemini review skipped because Gemini CLI is not authenticated."
+      ;;
+    tool)
+      skip_review "Gemini review skipped because Gemini CLI is unavailable in this environment."
+      ;;
+    *)
+      skip_review "Gemini review skipped because Gemini review failed unexpectedly."
+      ;;
+  esac
 fi
 
 python3 - "$RAW_JSON" "$FINAL_JSON" <<'PY'
@@ -111,9 +142,18 @@ from pathlib import Path
 
 raw_path = Path(sys.argv[1])
 out_path = Path(sys.argv[2])
+raw_text = raw_path.read_text(encoding="utf-8")
+
+def classify_skip(message: str) -> str:
+    lower = message.lower()
+    if any(token in lower for token in ["resource_exhausted", "quota", "rate limit", "too many requests", "429"]):
+        return "Gemini review skipped because Gemini quota or rate limits were reached."
+    if any(token in lower for token in ["not authenticated", "not logged in", "login", "unauthorized", "authentication"]):
+        return "Gemini review skipped because Gemini CLI is not authenticated."
+    return "Gemini did not return valid JSON. Treat this review as skipped."
 
 try:
-    outer = json.loads(raw_path.read_text(encoding="utf-8"))
+    outer = json.loads(raw_text)
     response = outer.get("response", "")
     parsed = json.loads(response)
     if not isinstance(parsed, dict):
@@ -122,7 +162,7 @@ try:
     parsed.setdefault("findings", [])
 except Exception:
     parsed = {
-        "summary": "Gemini did not return valid JSON. Treat this review as skipped.",
+        "summary": classify_skip(raw_text),
         "findings": []
     }
 

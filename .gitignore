@@ -1,0 +1,11 @@
+.next/
+out/
+node_modules/
+coverage/
+.harness/
+tsconfig.tsbuildinfo
+__pycache__/
+*.zip
+.claude/settings.local.json
+.DS_Store
+npm-debug.log*

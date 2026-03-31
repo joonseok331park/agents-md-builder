@@ -14,11 +14,11 @@ export default function HomePage(): JSX.Element {
     <div className="pageStack">
       <SeoJsonLd data={createSoftwareApplicationJsonLd()} />
       <section className="heroCard">
-        <span className="eyebrow">Static utility. No backend. No AI calls.</span>
-        <h1>Generate a focused AGENTS.md in a few minutes</h1>
+        <span className="eyebrow">Static utility &middot; No backend &middot; No AI calls</span>
+        <h1>Create AI-Ready Repo Documentation</h1>
         <p className="heroLead">
           Pick a preset, fill the structured fields, fix the inline lint warnings, and copy or download a clean
-          `AGENTS.md` without scanning your repository or sending data anywhere.
+          AGENTS.md — without scanning your repository or sending data anywhere.
         </p>
         <div className="heroLinks">
           <Link href="#builder" className="primaryLink">
@@ -38,14 +38,14 @@ export default function HomePage(): JSX.Element {
       </section>
       <GeneratorShell />
       <section className="infoCardGrid">
-        <article className="articleCard">
+        <article className="articleCard hoverLift">
           <h2>Why this builder exists</h2>
           <p>
             Most AGENTS files fail because they are vague, missing commands, or overloaded with unrelated policy. This
             builder narrows the output to the sections agents actually need to act safely.
           </p>
         </article>
-        <article className="articleCard">
+        <article className="articleCard hoverLift">
           <h2>What the lint panel checks</h2>
           <p>
             It flags missing verification commands, missing forbidden actions, vague phrases, duplicate commands,

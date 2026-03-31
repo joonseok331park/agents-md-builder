@@ -146,7 +146,7 @@ export function GeneratorShell(): JSX.Element {
   return (
     <section id="builder" className="builderShell">
       <div className="builderGrid">
-        <div className="stackColumn">
+        <div className="stackColumn formColumn">
           <PresetPicker
             presets={presets}
             activePreset={state.presetSlug}

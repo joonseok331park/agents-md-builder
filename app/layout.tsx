@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import Link from "next/link";
 
 import { createMetadata } from "@/lib/seo";
 
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = createMetadata({
   title: "AGENTS.md Builder — Generate a clean AGENTS.md in your browser",
@@ -13,7 +20,7 @@ export const metadata: Metadata = createMetadata({
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>): JSX.Element {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         <div className="siteShell">
           <header className="siteHeader">

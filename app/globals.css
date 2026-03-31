@@ -740,6 +740,62 @@ select {
   color: var(--ink-muted);
 }
 
+.footerInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.footerLinks a {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.footerLinks a:hover {
+  color: var(--primary);
+}
+
+/* ── Article cards in legal pages ── */
+
+.articleCard {
+  background: var(--surface-card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.articleCard h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+}
+
+.articleCard p,
+.articleCard ul {
+  color: var(--ink-variant);
+  line-height: 1.7;
+}
+
+.articleCard p + p {
+  margin-top: 0.75rem;
+}
+
+.articleCard a {
+  color: var(--primary);
+}
+
+.articleCard a:hover {
+  color: var(--primary-container);
+}
+
 /* ── Glass panel (for floating elements) ── */
 
 .glassPanel {

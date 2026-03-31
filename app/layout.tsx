@@ -35,7 +35,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </header>
           <main className="pageContainer">{children}</main>
           <footer className="siteFooter">
-            <p>AGENTS.md Builder is a local-only static utility for drafting precise, copy-ready AGENTS.md files.</p>
+            <div className="footerInner">
+              <p>AGENTS.md Builder is a local-only static utility for drafting precise, copy-ready AGENTS.md files.</p>
+              <nav className="footerLinks">
+                <Link href="/about">About</Link>
+                <Link href="/privacy">Privacy</Link>
+                <Link href="/terms">Terms</Link>
+                <Link href="/contact">Contact</Link>
+              </nav>
+            </div>
           </footer>
         </div>
       </body>

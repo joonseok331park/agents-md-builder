@@ -1,7 +1,8 @@
 import type { BuilderState, LintItem, LintSeverity } from "./types";
 
 const vaguePattern = /\b(do the right thing|use your best judgment|handle as needed|etc\.?|whatever works)\b/i;
-const placeholderPattern = /\b(todo|tbd|replace me|your project|project name|lorem ipsum|\[insert|<project)\b/i;
+const placeholderPattern =
+  /\b(todo|tbd|replace me|your project|project name|your[_ -]package|package[_ -]name|lorem ipsum|\[insert|<project)\b/i;
 const severityRank: Record<LintSeverity, number> = {
   error: 0,
   warning: 1,

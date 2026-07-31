@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL } from "./defaults";
+import { SITE_NAME } from "./defaults";
 import type { FaqItem } from "./types";
 
 type MetadataInput = {
@@ -9,18 +9,13 @@ type MetadataInput = {
 };
 
 export function createMetadata({ title, description, path = "/" }: MetadataInput): Metadata {
-  const canonical = new URL(path, SITE_URL).toString();
+  void path;
 
   return {
-    metadataBase: new URL(SITE_URL),
     title,
     description,
-    alternates: {
-      canonical,
-    },
     openGraph: {
       type: "website",
-      url: canonical,
       title,
       description,
       siteName: SITE_NAME,
@@ -40,7 +35,6 @@ export function createSoftwareApplicationJsonLd(): Record<string, unknown> {
     name: SITE_NAME,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Web",
-    url: SITE_URL,
     description:
       "A static utility that generates high-quality AGENTS.md files from presets, structured inputs, and client-side lint rules.",
     offers: {

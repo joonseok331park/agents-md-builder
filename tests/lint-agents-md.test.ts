@@ -129,6 +129,8 @@ describe("lintAgentsMd", () => {
 
   it("returns no errors for a well-formed default preset state", () => {
     const state = createStateFromPreset("nextjs-static");
+    state.projectName = "Docs Site";
+    state.projectPurpose = "Publish a statically exported product documentation site.";
     const items = lintAgentsMd(state, buildAgentsMd(state));
 
     const errors = items.filter((item) => item.severity === "error");
@@ -138,6 +140,15 @@ describe("lintAgentsMd", () => {
   it("detects placeholder-like project name", () => {
     const state = createStateFromPreset("nextjs-static");
     state.projectName = "TBD project name";
+
+    const items = lintAgentsMd(state, buildAgentsMd(state));
+
+    expect(items.some((item) => item.title === "Placeholder text detected")).toBe(true);
+  });
+
+  it("detects placeholder package names in commands", () => {
+    const state = createStateFromPreset("python-cli");
+    state.devCommand = "uv run python -m your_package";
 
     const items = lintAgentsMd(state, buildAgentsMd(state));
 

@@ -40,12 +40,11 @@ export function buildAgentsMd(state: BuilderState): string {
   const lines: string[] = [];
 
   addSection(lines, "# Project Purpose", [
-    `- Project name: ${state.projectName.trim()}`,
-    `- Purpose: ${state.projectPurpose.trim()}`,
-    `- Preset: ${state.presetSlug}`,
+    state.projectName.trim() ? `- Project name: ${state.projectName.trim()}` : "",
+    state.projectPurpose.trim() ? `- Purpose: ${state.projectPurpose.trim()}` : "",
     `- Primary runtime: ${state.runtime.trim()}`,
     `- Package manager: ${state.packageManager.trim()}`,
-  ]);
+  ].filter(Boolean));
 
   addSection(lines, "# Hard Constraints", bulletLines(state.forbiddenActions));
 
@@ -95,7 +94,7 @@ export function buildAgentsMd(state: BuilderState): string {
 
   const extraNotes = bulletLines(state.extraNotes);
   if (extraNotes.length > 0) {
-    addSection(lines, "# Optional Project-Specific Notes", extraNotes);
+    addSection(lines, "# Project-Specific Notes", extraNotes);
   }
 
   return `${lines.join("\n").trim()}\n`;

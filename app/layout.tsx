@@ -15,7 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = createMetadata({
   title: "AGENTS.md Builder — Generate a clean AGENTS.md in your browser",
   description:
-    "Generate a practical AGENTS.md from presets, structured inputs, and client-side lint checks. No backend, no AI API, and no repository scan required.",
+    "Generate a practical AGENTS.md from presets, structured inputs, and client-side lint checks without a backend or repository scan.",
 });
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>): JSX.Element {

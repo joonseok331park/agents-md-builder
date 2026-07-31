@@ -1,4 +1,4 @@
-import { createStateFromPreset, DEFAULT_PRESET_SLUG, isPresetSlug, STORAGE_KEY } from "./defaults";
+import { createStateFromPreset, isPresetSlug, STORAGE_KEY } from "./defaults";
 import type { BuilderState } from "./types";
 
 type StoredDraft = {
@@ -33,7 +33,12 @@ function sanitizeDraft(raw: unknown): BuilderState | null {
   }
 
   const record = raw as Record<string, unknown>;
-  const draft = "state" in record ? (record.state as Record<string, unknown>) : record;
+  const candidate = "state" in record ? record.state : record;
+  if (typeof candidate !== "object" || candidate === null) {
+    return null;
+  }
+
+  const draft = candidate as Record<string, unknown>;
   const presetSlug = draft.presetSlug;
 
   if (typeof presetSlug !== "string" || !isPresetSlug(presetSlug)) {
@@ -79,7 +84,12 @@ export function loadDraft(): BuilderState | null {
     }
     return sanitizeDraft(JSON.parse(raw));
   } catch {
-    return createStateFromPreset(DEFAULT_PRESET_SLUG);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Storage may be disabled entirely.
+    }
+    return null;
   }
 }
 
@@ -92,7 +102,11 @@ export function saveDraft(state: BuilderState): void {
     version: 1,
     state,
   };
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // The builder remains usable when storage is unavailable or full.
+  }
 }
 
 export function clearDraft(): void {
@@ -100,5 +114,9 @@ export function clearDraft(): void {
     return;
   }
 
-  window.localStorage.removeItem(STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Clearing an unavailable storage area is already the desired end state.
+  }
 }

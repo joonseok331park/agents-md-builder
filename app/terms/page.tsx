@@ -14,7 +14,7 @@ export default function TermsPage(): JSX.Element {
   return (
     <article className="articleStack">
       <h1>Terms of Service</h1>
-      <p className="mutedText">Last updated: March 31, 2026</p>
+      <p className="mutedText">Last updated: July 31, 2026</p>
 
       <section className="articleCard">
         <h2>Acceptance of terms</h2>
@@ -28,7 +28,8 @@ export default function TermsPage(): JSX.Element {
         <h2>Description of service</h2>
         <p>
           AGENTS.md Builder is a free, static web utility that helps you generate AGENTS.md files for AI coding agents.
-          It runs entirely in your browser with no server-side processing, no accounts, and no data collection.
+          Form processing runs in your browser with no application backend or accounts. The hosting provider may still
+          receive standard web request information as described in the Privacy Policy.
         </p>
       </section>
 
@@ -51,8 +52,9 @@ export default function TermsPage(): JSX.Element {
       <section className="articleCard">
         <h2>Intellectual property</h2>
         <p>
-          The AGENTS.md files you generate belong to you. The tool&apos;s source code, design, and preset content are provided
-          as-is. Preset content is designed as starting templates and may be freely modified.
+          The source repository does not currently grant an open-source license. Rights in the tool, design, and preset
+          content remain with their applicable owners. You are responsible for reviewing generated instructions and for
+          confirming that you have the rights needed for how you use or distribute them.
         </p>
       </section>
 
@@ -67,7 +69,7 @@ export default function TermsPage(): JSX.Element {
       <section className="articleCard">
         <h2>Limitation of liability</h2>
         <p>
-          In no event shall the creators of AGENTS.md Builder be liable for any indirect, incidental, special,
+          To the extent permitted by applicable law, the project maintainers shall not be liable for indirect, incidental, special,
           consequential, or punitive damages arising from your use of the service.
         </p>
       </section>

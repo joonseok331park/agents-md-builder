@@ -33,7 +33,7 @@ function RuleListEditor({
   return (
     <div className="fieldGroup">
       <div className="fieldHeader">
-        <label>{label}</label>
+        <span>{label}</span>
         <span className="mutedText">{description}</span>
       </div>
       <div className="ruleList">
@@ -44,6 +44,7 @@ function RuleListEditor({
               className="textInput"
               value={value}
               placeholder={placeholder}
+              aria-label={`${label} ${index + 1}`}
               onChange={(event) => updateAt(index, event.target.value)}
             />
             <button type="button" className="ghostButton" onClick={() => removeAt(index)} aria-label={`Remove ${label} row`}>
@@ -78,6 +79,7 @@ export function BuilderForm({ state, onChange }: BuilderFormProps): JSX.Element 
             type="text"
             className="textInput"
             value={state.projectName}
+            placeholder="Repository name"
             onChange={(event) => updateField("projectName", event.target.value)}
           />
         </div>
@@ -88,6 +90,7 @@ export function BuilderForm({ state, onChange }: BuilderFormProps): JSX.Element 
             type="text"
             className="textInput"
             value={state.projectPurpose}
+            placeholder="What this repository builds or maintains"
             onChange={(event) => updateField("projectPurpose", event.target.value)}
           />
         </div>
@@ -206,7 +209,7 @@ export function BuilderForm({ state, onChange }: BuilderFormProps): JSX.Element 
         label="Forbidden actions"
         description="Non-negotiable things the agent must never add or do."
         values={state.forbiddenActions}
-        placeholder="Do not add backend routes or AI API calls."
+        placeholder="Do not add undeclared backend routes or network services."
         onChange={(values) => updateField("forbiddenActions", values)}
       />
       <RuleListEditor

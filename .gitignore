@@ -2,10 +2,15 @@
 out/
 node_modules/
 coverage/
-.harness/
+.agents/
+.claude/
+.codex/
+.gemini/
+.vscode/
 tsconfig.tsbuildinfo
 __pycache__/
 *.zip
-.claude/settings.local.json
+CLAUDE.md
+GEMINI.md
 .DS_Store
 npm-debug.log*

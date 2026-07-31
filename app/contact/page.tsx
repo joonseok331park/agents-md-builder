@@ -5,7 +5,7 @@ import { createMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createMetadata({
   title: "Contact — AGENTS.md Builder",
-  description: "Get in touch with the AGENTS.md Builder team. Report issues, suggest features, or ask questions.",
+  description: "Report an AGENTS.md Builder bug, suggest a preset, or ask a question through the source repository.",
   path: "/contact",
 });
 
@@ -17,7 +17,8 @@ export default function ContactPage(): JSX.Element {
       <section className="articleCard">
         <h2>Get in touch</h2>
         <p>
-          AGENTS.md Builder is an open-source project. The best way to reach us is through GitHub.
+          The source repository is public. Use GitHub Issues for bug reports, preset suggestions, and questions about the
+          builder.
         </p>
       </section>
 
@@ -52,7 +53,8 @@ export default function ContactPage(): JSX.Element {
       <section className="articleCard">
         <h2>General questions</h2>
         <p>
-          For general questions, feedback, or suggestions, feel free to open a GitHub Discussion on the repository.
+          For general questions or feedback, open an issue with enough context to understand the request. Do not include
+          private repository instructions, credentials, or unpublished project details.
         </p>
       </section>
 

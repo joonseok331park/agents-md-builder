@@ -35,7 +35,11 @@ export function ExportActions({
           Clear saved draft
         </button>
       </div>
-      {statusMessage ? <p className="statusMessage infoText">{statusMessage}</p> : null}
+      {statusMessage ? (
+        <p className="statusMessage infoText" aria-live="polite">
+          {statusMessage}
+        </p>
+      ) : null}
     </section>
   );
 }

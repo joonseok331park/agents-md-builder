@@ -2,12 +2,11 @@ import { presetMap, presets } from "@/content/presets";
 import type { BuilderState, PresetSlug } from "./types";
 
 export const SITE_NAME = "AGENTS.md Builder";
-export const SITE_URL = "https://agents-md-builder.pages.dev";
 export const STORAGE_KEY = "agents-md-builder-draft";
 export const DEFAULT_PRESET_SLUG: PresetSlug = "nextjs-static";
 
 export function isPresetSlug(value: string): value is PresetSlug {
-  return value in presetMap;
+  return Object.hasOwn(presetMap, value);
 }
 
 export function createStateFromPreset(presetSlug: PresetSlug): BuilderState {
@@ -15,8 +14,8 @@ export function createStateFromPreset(presetSlug: PresetSlug): BuilderState {
 
   return {
     presetSlug,
-    projectName: preset.name,
-    projectPurpose: `Generate and maintain a focused ${preset.shortLabel} codebase with explicit agent rules.`,
+    projectName: "",
+    projectPurpose: "",
     runtime: preset.runtime,
     packageManager: preset.packageManager,
     installCommand: preset.installCommand,

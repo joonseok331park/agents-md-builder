@@ -10,7 +10,7 @@ import { SeoJsonLd } from "@/components/seo-jsonld";
 export const metadata: Metadata = createMetadata({
   title: "AGENTS.md guide — How to write precise rules for coding agents",
   description:
-    "Learn what AGENTS.md should contain, why presets help, and how to write clear rules for Codex, Copilot, Cursor, and similar coding agents.",
+    "Learn what AGENTS.md should contain, why presets help, and how to write clear repository rules for coding tools.",
   path: "/guide",
 });
 

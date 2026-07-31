@@ -48,6 +48,15 @@ export default async function TemplatePage({ params }: TemplatePageProps): Promi
     notFound();
   }
 
+  const commands = [
+    ["Install", preset.installCommand],
+    ["Dev", preset.devCommand],
+    ["Lint", preset.lintCommand],
+    ["Typecheck", preset.typecheckCommand],
+    ["Build", preset.buildCommand],
+    ["Test", preset.testCommand],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]));
+
   return (
     <article className="articleStack">
       <h1>{page.h1}</h1>
@@ -57,24 +66,11 @@ export default async function TemplatePage({ params }: TemplatePageProps): Promi
       <section className="articleCard">
         <h2>Common commands</h2>
         <ul className="bulletList">
-          <li>
-            Install: <code>{preset.installCommand}</code>
-          </li>
-          <li>
-            Dev: <code>{preset.devCommand}</code>
-          </li>
-          <li>
-            Lint: <code>{preset.lintCommand}</code>
-          </li>
-          <li>
-            Typecheck: <code>{preset.typecheckCommand}</code>
-          </li>
-          <li>
-            Build: <code>{preset.buildCommand}</code>
-          </li>
-          <li>
-            Test: <code>{preset.testCommand}</code>
-          </li>
+          {commands.map(([label, command]) => (
+            <li key={label}>
+              {label}: <code>{command}</code>
+            </li>
+          ))}
         </ul>
       </section>
       <section className="articleCard">

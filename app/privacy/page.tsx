@@ -6,7 +6,7 @@ import { createMetadata } from "@/lib/seo";
 export const metadata: Metadata = createMetadata({
   title: "Privacy Policy — AGENTS.md Builder",
   description:
-    "Privacy policy for AGENTS.md Builder. Learn how we handle data: everything stays in your browser, nothing is collected or transmitted.",
+    "AGENTS.md Builder keeps form contents and generated files in the browser and does not send drafts to an application server.",
   path: "/privacy",
 });
 
@@ -14,7 +14,7 @@ export default function PrivacyPage(): JSX.Element {
   return (
     <article className="articleStack">
       <h1>Privacy Policy</h1>
-      <p className="mutedText">Last updated: March 31, 2026</p>
+      <p className="mutedText">Last updated: July 31, 2026</p>
 
       <section className="articleCard">
         <h2>Overview</h2>
@@ -26,7 +26,7 @@ export default function PrivacyPage(): JSX.Element {
 
       <section className="articleCard">
         <h2>Data collection</h2>
-        <p>We do not collect, store, transmit, or have access to any of the following:</p>
+        <p>The application does not send the following content to an application server:</p>
         <ul className="bulletList">
           <li>Form inputs such as project names, commands, or repository notes.</li>
           <li>Generated AGENTS.md file contents.</li>
@@ -47,7 +47,7 @@ export default function PrivacyPage(): JSX.Element {
       <section className="articleCard">
         <h2>Cookies</h2>
         <p>
-          This site does not use cookies. No tracking cookies, session cookies, or third-party cookies are set.
+          The application does not set tracking or session cookies.
         </p>
       </section>
 
@@ -59,25 +59,10 @@ export default function PrivacyPage(): JSX.Element {
       </section>
 
       <section className="articleCard">
-        <h2>Third-party services</h2>
+        <h2>Hosting</h2>
         <p>
-          This site is hosted on Cloudflare Pages, which may collect standard web server logs (IP address, request URL,
-          timestamp) as part of its content delivery network infrastructure. These logs are governed by{" "}
-          <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">
-            Cloudflare&apos;s Privacy Policy
-          </a>.
-        </p>
-      </section>
-
-      <section className="articleCard">
-        <h2>Advertising</h2>
-        <p>
-          We may display advertisements through Google AdSense in the future. Google and its partners may use cookies to
-          serve ads based on your prior visits to this or other websites. You can opt out of personalized advertising by
-          visiting{" "}
-          <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">
-            Google Ads Settings
-          </a>.
+          Loading any website sends standard request information, such as an IP address, requested path, and timestamp,
+          to its hosting provider. Form contents and generated documents are not included in those requests by the app.
         </p>
       </section>
 

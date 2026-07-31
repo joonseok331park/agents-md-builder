@@ -29,6 +29,7 @@ export function PresetPicker({
               key={preset.slug}
               type="button"
               className={`presetCard${isActive ? " presetCardActive" : ""}${isPending ? " presetCardPending" : ""}`}
+              aria-pressed={isActive}
               onClick={() => onSelect(preset.slug)}
             >
               <span className="presetLabel">{preset.shortLabel}</span>

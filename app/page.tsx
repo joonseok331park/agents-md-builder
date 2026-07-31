@@ -14,8 +14,8 @@ export default function HomePage(): JSX.Element {
     <div className="pageStack">
       <SeoJsonLd data={createSoftwareApplicationJsonLd()} />
       <section className="heroCard">
-        <span className="eyebrow">Static utility &middot; No backend &middot; No AI calls</span>
-        <h1>Create AI-Ready Repo Documentation</h1>
+        <span className="eyebrow">Static utility &middot; Browser-local &middot; Deterministic</span>
+        <h1>Build a practical AGENTS.md</h1>
         <p className="heroLead">
           Pick a preset, fill the structured fields, fix the inline lint warnings, and copy or download a clean
           AGENTS.md — without scanning your repository or sending data anywhere.

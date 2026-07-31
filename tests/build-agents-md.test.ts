@@ -19,7 +19,7 @@ describe("buildAgentsMd", () => {
 
     const markdown = buildAgentsMd(state);
 
-    expect(markdown).not.toContain("# Optional Project-Specific Notes");
+    expect(markdown).not.toContain("# Project-Specific Notes");
   });
 
   it("deduplicates repeated rule entries", () => {
@@ -40,7 +40,7 @@ describe("buildAgentsMd", () => {
 
     const markdown = buildAgentsMd(state);
 
-    expect(markdown).toContain("# Optional Project-Specific Notes");
+    expect(markdown).toContain("# Project-Specific Notes");
     expect(markdown).toContain("- Keep this important reminder.");
   });
 
@@ -74,7 +74,14 @@ describe("buildAgentsMd", () => {
     expect(markdown).toContain("- Purpose: Build something great");
     expect(markdown).toContain("- Primary runtime: TypeScript");
     expect(markdown).toContain("- Package manager: pnpm");
-    expect(markdown).toContain("- Preset: nextjs-static");
+    expect(markdown).not.toContain("- Preset:");
+  });
+
+  it("omits blank project name and purpose rows", () => {
+    const markdown = buildAgentsMd(createStateFromPreset("nextjs-static"));
+
+    expect(markdown).not.toContain("- Project name:");
+    expect(markdown).not.toContain("- Purpose:");
   });
 
   it("includes all non-empty commands in the setup section", () => {

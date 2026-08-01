@@ -12,5 +12,6 @@ __pycache__/
 *.zip
 CLAUDE.md
 GEMINI.md
+AGENTS.md
 .DS_Store
 npm-debug.log*
